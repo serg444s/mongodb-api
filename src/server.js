@@ -1,10 +1,33 @@
 import express from 'express';
-
-const PORT = 4000;
+import connection from './db/db.js';
+const connectToDb = connection.connectToDb;
+const getDb = connection.getDb;
 
 export const setupServer = () => {
+  const PORT = 4000;
   const app = express();
-  app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+  let db;
+
+  connectToDb((err) => {
+    if (!err) {
+      app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
+        db = getDb();
+      });
+    } else {
+      console.log(`Error DB conection ${err}`);
+    }
+  });
+
+  app.get('/movies', (req, res) => {
+    const movies = [];
+    db.connection('movies')
+      .find()
+      .forEach((element) => {
+        movies.push(element);
+      })
+      .than(() => {
+        res.status(200).json(movies);
+      });
   });
 };
